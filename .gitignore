@@ -17,6 +17,7 @@ venv/
 *.sqlite
 chroma/
 faiss_index/
+data/
 
 # Logs
 *.log

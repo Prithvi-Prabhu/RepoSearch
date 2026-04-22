@@ -19,7 +19,7 @@ Question:
 Answer in the following format:
 
 ### Summary
-Give a 2-3 line overview of the repository.
+- Give a 2-3 line overview of the repository.
 
 ### Key Concepts
 - List main topics (e.g., arrays, loops, APIs)

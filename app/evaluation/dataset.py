@@ -1,14 +1,12 @@
 EVAL_DATA = [
     {
-        "repo_url": "https://github.com/langchain-ai/langchain",
-        "question": "What is LangChain?",
-        "expected_answer": "LangChain is a framework for building LLM applications.",
-        "keywords": ["framework", "LLM", "applications"]
+        "repo_url": "https://github.com/Prithvi-Prabhu/rag-ai-docs",
+        "question": "What does this repository do?",
+        "expected_answer": "It is a RAG-based documentation assistant using LangChain and FAISS.",
     },
     {
-        "repo_url": "https://github.com/langchain-ai/langchain",
-        "question": "What is a retriever?",
-        "expected_answer": "A retriever fetches relevant documents based on a query.",
-        "keywords": ["retrieve", "documents", "query"]
+        "repo_url": "https://github.com/Prithvi-Prabhu/CommBank_Basic-Programming",
+        "question": "What is the purpose of this repo?",
+        "expected_answer": "It contains basic programming tasks and exercises.",
     }
 ]
