@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import time
 
-API_URL = "http://localhost:8000"
+API_URL = "https://reposearch.onrender.com"
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
