@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+.env
+
+# OS
+.DS_Store
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Vector DB / embeddings
+*.db
+*.sqlite
+chroma/
+faiss_index/
+
+# Logs
+*.log
