@@ -1,170 +1,176 @@
 import streamlit as st
 import requests
 
-# ---------------- PAGE CONFIG ---------------- #
-st.set_page_config(
-    page_title="Repo RAG Assistant",
-    layout="wide",
-    page_icon="🤖"
-)
+API_URL = "http://localhost:8000"
 
-# ---------------- CUSTOM CSS ---------------- #
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(layout="wide", page_title="RepoSearch: RAG-based Assistant to Query GitHub Repositories", page_icon=":octopus:")
+
+# ------------------ CUSTOM CSS ------------------
 st.markdown("""
 <style>
-/* Global font + spacing */
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
+.stApp {
+    background-color: #0b1220;
+    color: white;
+    font-family: "Times New Roman", serif;
 }
 
-/* Chat bubbles */
-.chat-user {
-    background-color: #1f2937;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 8px;
-}
-
-.chat-assistant {
-    background-color: #111827;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-}
-
-/* Sidebar styling */
 section[data-testid="stSidebar"] {
-    background-color: #0f172a;
+    background-color: #111827;
+}
+
+section[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+.block-container {
+    padding-top: 2rem;
+}
+
+/* Card styling */
+.card {
+    background-color: #111827;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+/* Inputs */
+input, textarea {
+    background-color: #1f2937 !important;
+    color: white !important;
+    border-radius: 6px !important;
 }
 
 /* Buttons */
-button {
-    border-radius: 8px !important;
+.stButton button {
+    background-color: #e11d48;
+    color: white;
+    border-radius: 6px;
+    border: none;
 }
 
-/* Metric cards */
-[data-testid="metric-container"] {
-    background-color: #111827;
-    padding: 10px;
-    border-radius: 10px;
+/* Section titles */
+.section-title {
+    font-size: 22px;
+    margin-bottom: 10px;
 }
-
-/* Hide Streamlit footer */
-footer {visibility: hidden;}
+            
+header[data-testid="stHeader"] {
+    background: transparent;
+    box-shadow: none;
+}
+}
+            
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- SESSION STATE ---------------- #
-if "history" not in st.session_state:
-    st.session_state.history = []
+# ------------------ SIDEBAR ------------------
+st.sidebar.title("Menu")
 
-# ---------------- SIDEBAR ---------------- #
-with st.sidebar:
-    st.title("📥 Repo Ingestion")
+menu = st.sidebar.selectbox(
+    "Navigate",
+    ["Query Repo", "Evaluation"]
+)
 
-    repo = st.text_input("GitHub Repo URL")
+repo_url = st.sidebar.text_input("GitHub Repo URL")
 
-    if st.button("Ingest Repo"):
-        if not repo:
-            st.warning("Enter a repo URL")
-        else:
-            with st.spinner("Indexing repository..."):
-                try:
-                    r = requests.post(
-                        "http://localhost:8000/ingest",
-                        json={"repo_url": repo}
-                    )
-                    if r.ok:
-                        st.success("✅ Repo indexed successfully!")
-                    else:
-                        st.error(r.text)
-                except:
-                    st.error("Backend not running!")
+if st.sidebar.button("Ingest"):
+    with st.sidebar:
+        with st.spinner("Processing..."):
+            try:
+                r = requests.post(
+                    f"{API_URL}/ingest",
+                    json={"repo_url": repo_url}
+                )
+                if r.status_code == 200:
+                    st.success("Ingested successfully")
+                else:
+                    st.error("Failed")
+            except Exception as e:
+                st.error(str(e))
 
-    st.divider()
+# ------------------ HOME ------------------
+if menu == "Home":
+    st.title("RepoSearch: RAG-based Assistant to Query GitHub Repositories")
 
-    st.markdown("### ⚙️ Settings")
-    st.caption("Local embeddings + FAISS")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("### Overview")
+    st.write("""
+    - Ingest GitHub repositories  
+    - Ask questions using RAG  
+    - Evaluate responses with metrics  
+    """)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- MAIN LAYOUT ---------------- #
-col1, col2 = st.columns([3, 1])
+# ------------------ QUERY ------------------
+if menu == "Query Repo":
 
-# ---------------- CHAT PANEL ---------------- #
-with col1:
-    st.title("💬 Repo RAG Assistant")
-    st.caption("Ask questions about any GitHub repository")
+    st.title("Query Repository")
 
-    # Chat input
-    query = st.chat_input("Ask something about the repo...")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    if query:
-        st.session_state.history.append(("user", query))
+    query = st.text_input("Question")
 
-        with st.spinner("Thinking..."):
+    if st.button("Submit Query"):
+        with st.spinner("Running..."):
             try:
                 r = requests.get(
-                    "http://localhost:8000/query",
-                    params={"repo_url": repo, "q": query}
+                    f"{API_URL}/query",
+                    params={"repo_url": repo_url, "q": query}
                 )
 
-                if r.ok:
-                    res = r.json()
-                    answer = res["answer"]
-                    sources = res.get("sources", [])
+                if r.status_code == 200:
+                    data = r.json()
 
-                    st.session_state.history.append(("assistant", answer, sources))
+                    st.markdown("### Answer")
+                    st.write(data.get("answer"))
+
+                    if "sources" in data:
+                        st.markdown("### Sources")
+                        for s in data["sources"]:
+                            st.code(s)
+
                 else:
-                    st.session_state.history.append(
-                        ("assistant", f"Error: {r.text}", [])
-                    )
+                    st.error("Query failed")
 
-            except:
-                st.session_state.history.append(
-                    ("assistant", "Backend not running!", [])
-                )
+            except Exception as e:
+                st.error(str(e))
 
-    # Display chat history
-    for item in st.session_state.history:
-        if item[0] == "user":
-            with st.chat_message("user"):
-                st.markdown(item[1])
-        else:
-            with st.chat_message("assistant"):
-                st.markdown(item[1])
+    st.markdown('</div>', unsafe_allow_html=True)
 
-                # Sources (expandable)
-                if len(item) > 2 and item[2]:
-                    with st.expander("📄 Sources"):
-                        for s in item[2]:
-                            st.write(s)
+# ------------------ EVALUATION ------------------
+elif menu == "Evaluation":
 
-# ---------------- METRICS PANEL ---------------- #
-with col2:
-    st.title("📊 Evaluation")
+    st.title("Evaluation")
+
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
     if st.button("Run Evaluation"):
-        with st.spinner("Running evaluation..."):
+        with st.spinner("Evaluating..."):
             try:
-                r = requests.get("http://localhost:8000/eval")
+                r = requests.get(f"{API_URL}/eval")
 
-                if r.ok:
+                if r.status_code == 200:
                     res = r.json()
 
-                    st.metric("Faithfulness", res.get("faithfulness", "N/A"))
-                    st.metric("Answer Relevance", res.get("answer_relevance", "N/A"))
-                    st.metric("Context Recall", res.get("context_recall", "N/A"))
+                    # If using average_scores format
+                    avg = res.get("average_scores", res)
+
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        st.metric("Faithfulness", round(avg.get("faithfulness", 0), 2))
+                        st.metric("Answer Relevancy", round(avg.get("answer_relevancy", 0), 2))
+
+                    with col2:
+                        st.metric("Context Precision", round(avg.get("context_precision", 0), 2))
+                        st.metric("Context Recall", round(avg.get("context_recall", 0), 2))
 
                 else:
                     st.error("Eval failed")
 
-            except:
-                st.error("Backend not running")
+            except Exception as e:
+                st.error(str(e))
 
-    st.divider()
-
-    st.markdown("### 🧠 System Info")
-    st.caption("""
-    - FAISS Vector DB  
-    - Local Embeddings  
-    - Groq LLM  
-    - LangSmith Logging  
-    """)
+    st.markdown('</div>', unsafe_allow_html=True)
