@@ -6,7 +6,6 @@ langchain-text-splitters
 langchain-core
 langchain-groq
 faiss-cpu
-sentence-transformers
 gitpython
 streamlit
 python-dotenv
