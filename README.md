@@ -5,6 +5,8 @@
 RepoSearch is a full-stack AI application that allows users to ingest GitHub repositories and query them using natural language. It uses Retrieval-Augmented Generation (RAG) to provide context-aware answers and includes an evaluation pipeline to measure response quality.
 
 ---
+<img width="1918" height="963" alt="image" src="https://github.com/user-attachments/assets/dbf4ed8e-9437-4fdf-99d1-6a3d2c7f84d6" />
+
 
 ## Features
 
