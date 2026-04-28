@@ -22,13 +22,13 @@ def db_cursor():
 
 def repo_exists(repo_id: str) -> bool:
     with db_cursor() as (conn, cur):
-        cur.execute("SELECT 1 FROM repos WHERE id = %s", (repo_id,))
+        cur.execute("SELECT 1 FROM repos WHERE id = ?", (repo_id,))
         return cur.fetchone() is not None
 
 
 def insert_repo(repo_id: str, url: str) -> None:
     with db_cursor() as (conn, cur):
         cur.execute(
-            "INSERT INTO repos (id, url) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING",
+            "INSERT OR IGNORE INTO repos (id, url) VALUES (?, ?)",
             (repo_id, url),
         )

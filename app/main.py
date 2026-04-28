@@ -4,12 +4,18 @@ from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from app.routes import ingest, query, eval
 from app.core.rate_limiter import limiter
+from app.db.db import init_db
 
 app = FastAPI(
     title="RepoSearch API",
     description="RAG-based assistant for querying GitHub repositories",
     version="1.0.0",
 )
+
+# ─── Initialise SQLite schema on startup ─────────────────────────────────────
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 # ─── Rate limiter ─────────────────────────────────────────────────────────────
 app.state.limiter = limiter
