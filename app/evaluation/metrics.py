@@ -1,25 +1,29 @@
 import json
-from langchain_groq import ChatGroq
+from groq import Groq
 from app.core.config import GROQ_API_KEY
 
-llm = ChatGroq(api_key=GROQ_API_KEY, model="llama-3.1-8b-instant")
+client = Groq(api_key=GROQ_API_KEY)
+
 
 # ─── Shared scoring helper ────────────────────────────────────────────────────
 
 def _score(prompt: str) -> dict:
     """
     Asks the LLM to return a JSON object with `score` (0–1) and `reason`.
-    Falls back to 0.0 on any parse error. Using JSON forces the model to
-    be explicit about its reasoning, which also makes scores more reliable.
+    Falls back to 0.0 on any parse error.
     """
-    full_prompt = prompt + """
-
-Respond ONLY with a valid JSON object. No extra text. Example:
-{"score": 0.85, "reason": "The answer is mostly supported by the context but misses one detail."}
-"""
+    full_prompt = (
+        prompt
+        + "\n\nRespond ONLY with a valid JSON object. No extra text. Example:\n"
+        '{"score": 0.85, "reason": "The answer is mostly supported by the context but misses one detail."}'
+    )
     try:
-        res = llm.invoke(full_prompt)
-        data = json.loads(res.content)
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": full_prompt}],
+            max_tokens=256,
+        )
+        data = json.loads(response.choices[0].message.content)
         score = float(data.get("score", 0.0))
         reason = data.get("reason", "")
         return {"score": max(0.0, min(1.0, score)), "reason": reason}
@@ -42,8 +46,7 @@ Generated answer: {answer}
 
 Score how well the answer is supported ONLY by the provided context (not prior knowledge).
 A score of 1.0 means every claim in the answer can be traced to the context.
-A score of 0.0 means the answer introduces information not present in the context.
-"""
+A score of 0.0 means the answer introduces information not present in the context."""
     return _score(prompt)
 
 
@@ -58,8 +61,7 @@ Answer: {answer}
 
 Score how directly and completely the answer addresses the question.
 1.0 = fully addresses the question with no off-topic content.
-0.0 = completely off-topic or empty.
-"""
+0.0 = completely off-topic or empty."""
     return _score(prompt)
 
 
@@ -75,8 +77,7 @@ Retrieved context: {context}
 
 Score what fraction of the retrieved context is actually relevant to answering the question.
 1.0 = all retrieved content is useful for answering.
-0.0 = retrieved content is entirely irrelevant.
-"""
+0.0 = retrieved content is entirely irrelevant."""
     return _score(prompt)
 
 
@@ -92,6 +93,5 @@ Retrieved context: {context}
 
 Score whether the retrieved context contains enough information to produce the expected answer.
 1.0 = context has everything needed to derive the expected answer.
-0.0 = context is missing all key information.
-"""
+0.0 = context is missing all key information."""
     return _score(prompt)

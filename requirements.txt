@@ -1,14 +1,10 @@
 fastapi
 uvicorn
-langchain
-langchain-community
+chromadb
+fastembed
+groq
 langchain-text-splitters
-langchain-core
-langchain-groq
-faiss-cpu
-sentence-transformers
 gitpython
 streamlit
 python-dotenv
 slowapi
-psycopg2-binary

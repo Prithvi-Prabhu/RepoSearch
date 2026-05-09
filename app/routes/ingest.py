@@ -30,7 +30,7 @@ def ingest(request: Request, body: RepoRequest):
     docs = []
 
     for f in files:
-        docs.extend(chunk_file(f))
+        docs.extend(chunk_file(f))  # each item is now a plain dict
 
     create_index(docs, repo_id)
     insert_repo(repo_id, body.repo_url)

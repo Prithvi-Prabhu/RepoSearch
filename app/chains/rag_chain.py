@@ -1,14 +1,10 @@
-from langchain_core.prompts import PromptTemplate
-from langchain_groq import ChatGroq
+from groq import Groq
 from app.retrieval.retriever import retrieve
 from app.core.config import GROQ_API_KEY
 
-llm = ChatGroq(api_key=GROQ_API_KEY, model="llama-3.1-8b-instant")
+client = Groq(api_key=GROQ_API_KEY)
 
-from langchain_core.prompts import PromptTemplate
-
-prompt = PromptTemplate.from_template("""
-You are a code assistant. Analyze the repository and give a structured answer.
+PROMPT_TEMPLATE = """You are a code assistant. Analyze the repository and give a structured answer.
 
 Context:
 {context}
@@ -33,16 +29,28 @@ Answer in the following format:
 ### Notes
 - Any insights or observations
 
-Keep it concise and clean. Use bullet points.
-""")
+Keep it concise and clean. Use bullet points."""
 
-def run(repo_id, query):
+
+def run(repo_id: str, query: str) -> tuple[str, list[dict]]:
     docs = retrieve(repo_id, query)
 
     if not docs:
         return "No relevant info found", []
 
-    context = "\n\n".join(d.page_content for d in docs)
+    context = "\n\n".join(d["page_content"] for d in docs)
 
-    response = llm.invoke(prompt.format(context=context, question=query))
-    return response.content, [d.metadata for d in docs]
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {
+                "role": "user",
+                "content": PROMPT_TEMPLATE.format(context=context, question=query),
+            }
+        ],
+        max_tokens=1000,
+    )
+
+    answer = response.choices[0].message.content
+    sources = [d["metadata"] for d in docs]
+    return answer, sources
