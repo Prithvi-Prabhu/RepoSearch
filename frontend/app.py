@@ -338,7 +338,7 @@ with st.sidebar:
                 st.success(f"Indexed {files} files ✓")
 
     st.markdown("---")
-    st.caption("Powered by Groq · FAISS · LangChain")
+    st.caption("Powered by Groq · ChromaDB · LangChain")
 
 
 # ── Query page ────────────────────────────────────────────────────────────────
